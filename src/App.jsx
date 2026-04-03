@@ -7,42 +7,48 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   async function generateImage() {
-    if (!prompt.trim()) {
-      alert("Enter a prompt");
+  if (!prompt.trim()) {
+    alert("Enter a prompt");
+    return;
+  }
+
+  setLoading(true);
+  setImage(null);
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+    });
+
+    // ❌ handle backend error
+    if (!response.ok) {
+      const err = await response.json();
+      alert(err.error || "Failed to generate image");
       return;
     }
 
-    setLoading(true);
-    setImage(null);
+    const blob = await response.blob();
 
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      // ✅ IMPORTANT: show backend error message
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Backend error:", errorData);
-        alert(errorData.error || "Failed to generate image");
-        return;
-      }
-
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-
-      setImage(imageUrl);
-    } catch (error) {
-      console.error("Frontend error:", error);
-      alert("Something went wrong");
-    } finally {
-      setLoading(false);
+    // 🔥 IMPORTANT CHECK
+    if (blob.type !== "image/png" && blob.type !== "image/jpeg") {
+      alert("Model is loading... try again in a few seconds");
+      return;
     }
+
+    const imageUrl = URL.createObjectURL(blob);
+    setImage(imageUrl);
+
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="main">

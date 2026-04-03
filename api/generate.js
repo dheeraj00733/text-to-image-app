@@ -24,7 +24,6 @@ export default async function handler(req, res) {
 
     const contentType = response.headers.get("content-type");
 
-    // handle error JSON
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
       return res.status(500).json({
@@ -37,6 +36,7 @@ export default async function handler(req, res) {
 
     res.setHeader("Content-Type", "image/png");
     res.status(200).send(buffer);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
