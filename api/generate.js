@@ -24,13 +24,16 @@ export default async function handler(req, res) {
 
     const contentType = response.headers.get("content-type");
 
+    // ✅ If HuggingFace sends error JSON
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
+
       return res.status(500).json({
-        error: data.error || "Model loading, try again",
+        error: data.error || "Model is loading, try again in 10 seconds",
       });
     }
 
+    // ✅ If image is returned
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
