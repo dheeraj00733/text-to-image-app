@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
+      "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
       {
         method: "POST",
         headers: {
@@ -24,25 +24,21 @@ export default async function handler(req, res) {
 
     const contentType = response.headers.get("content-type");
 
-    // 🔥 HANDLE JSON ERROR FROM HF
+    // handle error JSON
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
-
-      console.error("HF JSON ERROR:", data);
-
       return res.status(500).json({
-        error: data.error || "Model is loading, try again in few seconds",
+        error: data.error || "Model loading, try again",
       });
     }
 
-    // ✅ IMAGE SUCCESS
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     res.setHeader("Content-Type", "image/png");
     res.status(200).send(buffer);
   } catch (error) {
-    console.error("SERVER ERROR:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 }
