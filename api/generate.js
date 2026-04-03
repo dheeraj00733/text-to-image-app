@@ -18,24 +18,24 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${process.env.VITE_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ inputs: prompt }),
+        body: JSON.stringify({
+          inputs: prompt,
+        }),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(errorText);
+      console.error("HF ERROR:", errorText);
       return res.status(500).json({ error: "HuggingFace API failed" });
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     res.setHeader("Content-Type", "image/png");
-    return res.status(200).send(buffer);
-
+    res.send(Buffer.from(arrayBuffer));
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("SERVER ERROR:", error);
+    res.status(500).json({ error: "Server error" });
   }
 }
