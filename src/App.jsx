@@ -6,7 +6,7 @@ export default function App() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function generateImage(retries = 3) {
+  async function generateImage() {
     if (!prompt.trim()) {
       alert("Enter a prompt");
       return;
@@ -16,35 +16,27 @@ export default function App() {
     setImage(null);
 
     try {
-      const response = await fetch(
-        "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
 
-      if (!response.ok) throw new Error("API error");
+      if (!response.ok) {
+        throw new Error("API failed");
+      }
 
       const blob = await response.blob();
       const imageUrl = URL.createObjectURL(blob);
 
       setImage(imageUrl);
-      setLoading(false);
     } catch (error) {
-      if (retries > 0) {
-        console.log("Retrying...");
-        setTimeout(() => generateImage(retries - 1), 3000);
-        return; // 🔥 IMPORTANT
-      } else {
-        console.error(error);
-        alert("Server busy. Try again.");
-        setLoading(false);
-      }
+      console.error(error);
+      alert("Failed to generate image");
+    } finally {
+      setLoading(false);
     }
   }
 
