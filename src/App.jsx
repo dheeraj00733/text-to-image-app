@@ -6,43 +6,44 @@ export default function App() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function generateImage() {
-    if (!prompt.trim()) {
-      alert("Enter a prompt");
-      return;
-    }
-
-    setLoading(true);
-    setImage(null);
-
-    try {
-      const response = await fetch(
-        "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
-        {
-          method: "POST",
-          headers: {
-            
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("API error");
-      }
-
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-
-      setImage(imageUrl);
-    } catch (error) {
-      console.error(error);
-      alert("Try again in 10 seconds (model loading)");
-    } finally {
-      setLoading(false);
-    }
+  async function generateImage(retries = 3) {
+  if (!prompt.trim()) {
+    alert("Enter a prompt");
+    return;
   }
+
+  setLoading(true);
+  setImage(null);
+
+  try {
+    const response = await fetch(
+      "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2-1",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: prompt }),
+      }
+    );
+
+    if (!response.ok) throw new Error("API error");
+
+    const blob = await response.blob();
+    const imageUrl = URL.createObjectURL(blob);
+
+    setImage(imageUrl);
+  } catch (error) {
+  if (retries > 0) {
+    console.log("Retrying...");
+    setTimeout(() => generateImage(retries - 1), 3000);
+    return; // 🔥 IMPORTANT (prevents loading false)
+  } else {
+    alert("Server busy. Try again.");
+    setLoading(false);
+  }
+}
 
   return (
     <div className="main">
