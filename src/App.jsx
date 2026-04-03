@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./App.css"
+import "./App.css";
 
 export default function App() {
   const [prompt, setPrompt] = useState("");
@@ -7,44 +7,46 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   async function generateImage(retries = 3) {
-  if (!prompt.trim()) {
-    alert("Enter a prompt");
-    return;
-  }
+    if (!prompt.trim()) {
+      alert("Enter a prompt");
+      return;
+    }
 
-  setLoading(true);
-  setImage(null);
+    setLoading(true);
+    setImage(null);
 
-  try {
-    const response = await fetch(
-      "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2-1",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: prompt }),
+    try {
+      const response = await fetch(
+        "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
+
+      if (!response.ok) throw new Error("API error");
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+
+      setImage(imageUrl);
+      setLoading(false);
+    } catch (error) {
+      if (retries > 0) {
+        console.log("Retrying...");
+        setTimeout(() => generateImage(retries - 1), 3000);
+        return; // 🔥 IMPORTANT
+      } else {
+        console.error(error);
+        alert("Server busy. Try again.");
+        setLoading(false);
       }
-    );
-
-    if (!response.ok) throw new Error("API error");
-
-    const blob = await response.blob();
-    const imageUrl = URL.createObjectURL(blob);
-
-    setImage(imageUrl);
-  } catch (error) {
-  if (retries > 0) {
-    console.log("Retrying...");
-    setTimeout(() => generateImage(retries - 1), 3000);
-    return;
-  } else {
-    console.error(error);
-    alert("Server is busy, please try again.");
-    setLoading(false);
+    }
   }
-}
 
   return (
     <div className="main">
@@ -62,15 +64,26 @@ export default function App() {
           className="input"
         />
 
-        <button onClick={generateImage} className="btn">
+        <button
+          onClick={generateImage}
+          className="btn"
+          disabled={loading}
+        >
           {loading ? "Generating..." : "Generate Image"}
         </button>
 
-        {loading && <div className="loader"></div>}
+        {loading && (
+          <>
+            <div className="loader"></div>
+            <p style={{ color: "white", marginTop: "10px" }}>
+              ⏳ AI is loading... please wait
+            </p>
+          </>
+        )}
 
         {image && (
           <div className="image-box">
-            <img src={image} alt="Generated" />
+            <img src={image} alt="Generated AI artwork" />
             <a href={image} download>
               <button className="download">Download</button>
             </a>
@@ -79,5 +92,4 @@ export default function App() {
       </div>
     </div>
   );
-}
 }
