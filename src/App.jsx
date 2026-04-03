@@ -38,9 +38,10 @@ export default function App() {
   if (retries > 0) {
     console.log("Retrying...");
     setTimeout(() => generateImage(retries - 1), 3000);
-    return; // 🔥 IMPORTANT (prevents loading false)
+    return;
   } else {
-    alert("Server busy. Try again.");
+    console.error(error);
+    alert("Server is busy, please try again.");
     setLoading(false);
   }
 }
