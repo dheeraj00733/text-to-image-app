@@ -24,8 +24,12 @@ export default function App() {
         body: JSON.stringify({ prompt }),
       });
 
+      // ✅ IMPORTANT: show backend error message
       if (!response.ok) {
-        throw new Error("API failed");
+        const errorData = await response.json();
+        console.error("Backend error:", errorData);
+        alert(errorData.error || "Failed to generate image");
+        return;
       }
 
       const blob = await response.blob();
@@ -33,8 +37,8 @@ export default function App() {
 
       setImage(imageUrl);
     } catch (error) {
-      console.error(error);
-      alert("Failed to generate image");
+      console.error("Frontend error:", error);
+      alert("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -68,7 +72,7 @@ export default function App() {
           <>
             <div className="loader"></div>
             <p style={{ color: "white", marginTop: "10px" }}>
-              ⏳ AI is loading... please wait
+              ⏳ AI is generating... please wait
             </p>
           </>
         )}
@@ -76,7 +80,7 @@ export default function App() {
         {image && (
           <div className="image-box">
             <img src={image} alt="Generated AI artwork" />
-            <a href={image} download>
+            <a href={image} download="ai-image.png">
               <button className="download">Download</button>
             </a>
           </div>
